@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<ns0:RootFileSystem xmlns:ns0="https://www.linutronix.de/projects/Elbe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" created="2009-05-20T08:50:56" revision="6" xsi:schemaLocation="https://www.linutronix.de/projects/Elbe dbsfed.xsd">
+  <project>
+    <name>RapsberryPi-Overlay</name>
+    <version>1.0</version>
+    <description>
+                        Rapsberry Pi Overlay Image
+                </description>
+    <buildtype>aarch64</buildtype>
+    <mirror>
+      <primary_host>ftp.de.debian.org</primary_host>
+      <primary_path>/debian</primary_path>
+      <primary_proto>http</primary_proto>
+      <url-list>
+        <url>
+          <binary>http://deb.debian.org/debian-security bookworm-security main</binary>
+          <source>http://deb.debian.org/debian-security bookworm-security main</source>
+        </url>
+        <url>
+          <binary>http://deb.debian.org/debian bookworm non-free-firmware</binary>
+          <source>http://deb.debian.org/debian bookworm non-free-firmware</source>
+        </url>
+        <url>
+          <binary>http://deb.debian.org/debian-security bookworm-security non-free-firmware</binary>
+          <source>http://deb.debian.org/debian-security bookworm-security non-free-firmware</source>
+        </url>
+      </url-list>
+    </mirror>
+    <suite>bookworm</suite>
+  </project>
+  <target>
+    <hostname>rpi64</hostname>
+    <domain/>
+    <passwd_hashed>$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/</passwd_hashed>
+    <console>serial0,115200</console>
+    <debootstrap>
+      <variant>minbase</variant>
+    </debootstrap>
+
+    <images>
+      <msdoshd>
+        <name>sdcard.img</name>
+        <size>5GB</size>
+        <partition>
+          <size>128MB</size>
+          <label>firmware</label>
+        </partition>
+        <partition>
+          <size>remain</size>
+          <label>root</label>
+          <bootable/>
+        </partition>
+      </msdoshd>
+    </images>
+    <fstab>
+      <bylabel>
+        <label>firmware</label>
+        <mountpoint>/boot/firmware</mountpoint>
+        <fs>
+          <type>vfat</type>
+        </fs>
+      </bylabel>
+      <bylabel>
+        <label>root</label>
+        <mountpoint>/</mountpoint>
+        <fs>
+          <type>ext4</type>
+        </fs>
+      </bylabel>
+    </fstab>
+    <install-recommends/>
+    <pkg-list>
+      <pkg>linux-image-arm64</pkg>
+      <pkg>firmware-brcm80211</pkg>
+      <pkg>raspi-firmware</pkg>
+      <pkg>zstd</pkg>
+      <pkg>apt-utils</pkg>
+      <pkg>systemd</pkg>
+      <pkg>systemd-resolved</pkg>
+      <pkg>systemd-timesyncd</pkg>
+      <pkg>vim-tiny</pkg>
+      <pkg>busybox</pkg>
+      <pkg>bash</pkg>
+      <pkg>openssh-server</pkg>
+    </pkg-list>
+    <finetuning>
+      <command>echo 'ROOTPART="LABEL=root"' &gt;&gt; /etc/default/raspi-firmware</command>
+      <command>echo 'KERNEL_ARCH="arm64"' &gt;&gt; /etc/default/raspi-firmware</command>
+      <command>echo 'init=/usr/lib/systemd/systemd' &gt;&gt; /etc/default/raspi-extra-cmdline</command>
+      <command>systemctl enable systemd-networkd</command>
+      <command>echo 'overlay' &gt;&gt;/etc/initramfs-tools/modules </command>
+      <command>echo 'squashfs' &gt;&gt;/etc/initramfs-tools/modules </command>
+      <file dst="/etc/initramfs-tools/scripts/init-bottom/overlayfs" mode="777">
+        #!/bin/sh
+        # Script to set up overlayfs with squashfs in initramfs
+        set -e
+
+        # Define the lower and upper directories
+        lowerdir=/mnt/lower
+        upperdir=/mnt/upper
+        workdir=/mnt/work
+        ext4dir=/mnt/ext4
+
+        # Create directories
+        mkdir -p $ext4dir $lowerdir $upperdir $workdir
+
+        modprobe overlay
+        modprobe squashfs
+        # Mount the squashfs root filesystem
+
+        mount /dev/mmcblk0p2  /mnt/ext4
+        mount -t squashfs -o loop /mnt/ext4/app/root.squashfs $lowerdir
+
+        # Mount tmpfs for the upper (writable) layer
+        #mount -t tmpfs tmpfs $upperdir
+
+        # Setup overlayfs
+        mount -t overlay overlay -o lowerdir=$lowerdir,upperdir=$upperdir,workdir=$workdir /root
+
+        # Cleanup exec switch_root /newroot /sbin/init              
+        umount $lowerdir $upperdir $workdir
+        rmdir $lowerdir $upperdir $workdir
+
+        exit 0
+
+      </file>
+      <file dst="/etc/initramfs-tools/hooks/overlayfs" mode="777">
+          #!/bin/sh
+        set -e
+
+        PREREQ=""
+
+        prereqs() {
+                echo "$PREREQ"
+        }
+
+        case "$1" in
+        prereqs)
+                prereqs
+                exit 0
+                ;;
+        esac
+
+        . /usr/share/initramfs-tools/hook-functions
+
+        # Include overlayfs and squashfs modules
+        manual_add_modules overlay
+        manual_add_modules squashfs
+
+        # Copy necessary binaries (e.g., mount and other tools)
+        copy_exec /bin/mount /bin
+        copy_exec /bin/umount /bin
+
+        exit 0
+      </file>
+      <command>update-initramfs -u -k all</command>
+      <command>rm -rf /bin /boot /etc /home /initrd.img /initrd.img.old /lib /lost+found /media /mnt /networkd /opt /root /run /sbin /srv /tmp /usr /var /vmlinuz /vmlinuz.old</command>
+    </finetuning>
+  </target>
+  <archivedir>overlays/</archivedir>
+</ns0:RootFileSystem>

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<ns0:RootFileSystem xmlns:ns0="https://www.linutronix.de/projects/Elbe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" created="2009-05-20T08:50:56" revision="6" xsi:schemaLocation="https://www.linutronix.de/projects/Elbe dbsfed.xsd">
+<project>
+<name>RapsberryPi-Squashfs</name>
+<version>1.0</version>
+<description>Rapsberry Pi squashfs image</description>
+<buildtype>aarch64</buildtype>
+<mirror>
+    <primary_host>ftp.de.debian.org</primary_host>
+    <primary_path>/debian</primary_path>
+    <primary_proto>http</primary_proto>
+    <url-list>
+        <url>
+            <binary>http://deb.debian.org/debian-security bookworm-security main</binary>
+            <source>http://deb.debian.org/debian-security bookworm-security main</source>
+        </url>
+        <url>
+            <binary>http://deb.debian.org/debian bookworm non-free-firmware</binary>
+            <source>http://deb.debian.org/debian bookworm non-free-firmware</source>
+        </url>
+        <url>
+            <binary>http://deb.debian.org/debian-security bookworm-security non-free-firmware</binary>
+            <source>http://deb.debian.org/debian-security bookworm-security non-free-firmware</source>
+        </url>
+    </url-list>
+</mirror>
+<suite>bookworm</suite>
+</project>
+<target>
+<hostname>rpi64</hostname>
+<domain/>
+<passwd_hashed>$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/</passwd_hashed>
+<console>serial0,115200</console>
+<package>
+    <squashfs>
+        <name>root.squashfs</name>
+    </squashfs>
+</package>
+<debootstrap>
+    <variant>minbase</variant>
+</debootstrap>
+
+<pkg-list>
+    <pkg>linux-image-arm64</pkg>
+    <pkg>firmware-brcm80211</pkg>
+    <pkg>raspi-firmware</pkg>
+    <pkg>zstd</pkg>
+    <pkg>apt-utils</pkg>
+    <pkg>systemd</pkg>
+    <pkg>systemd-resolved</pkg>
+    <pkg>systemd-timesyncd</pkg>
+    <pkg>vim-tiny</pkg>
+    <pkg>busybox</pkg>
+    <pkg>bash</pkg>
+    <pkg>openssh-server</pkg>
+    <pkg>unzip</pkg>
+    <pkg>i2c-tools</pkg>
+    <pkg>can-utils</pkg>
+    <pkg>usbutils</pkg>
+    <pkg>pciutils</pkg>
+    <pkg>mmc-utils</pkg>
+    <pkg>iptables</pkg>
+    <pkg>bridge-utils</pkg>
+</pkg-list>
+</target>
+</ns0:RootFileSystem>

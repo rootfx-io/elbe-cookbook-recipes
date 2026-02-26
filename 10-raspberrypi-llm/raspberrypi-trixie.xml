@@ -1,0 +1,202 @@
+<ns0:RootFileSystem xmlns:ns0="https://www.linutronix.de/projects/Elbe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" created="2009-05-20T08:50:56" revision="6" xsi:schemaLocation="https://www.linutronix.de/projects/Elbe dbsfed.xsd">
+<project>
+ <name>raspberrypi5-custom_kernel-trixie</name>
+ <version>1.0</version>
+ <description>
+     Rapsberry Pi 5 Boot image for LLMs
+ </description>
+ <buildtype>aarch64</buildtype>
+ <mirror>
+  <primary_host>ftp.de.debian.org</primary_host>
+  <primary_path>/debian</primary_path>
+  <primary_proto>http</primary_proto>
+  <url-list>
+   <url>
+     <binary>http://deb.debian.org/debian-security trixie-security main</binary>
+     <source>http://deb.debian.org/debian-security trixie-security main</source>
+   </url>
+   <url>
+     <binary>http://deb.debian.org/debian trixie non-free-firmware</binary>
+     <source>http://deb.debian.org/debian trixie non-free-firmware</source>
+   </url>
+   <url>
+     <binary>http://deb.debian.org/debian trixie contrib</binary>
+     <source>http://deb.debian.org/debian trixie contrib</source>
+   </url>
+   <url>
+       <binary>http://deb.debian.org/debian-security trixie-security non-free-firmware</binary>
+       <source>http://deb.debian.org/debian-security trixie-security non-free-firmware</source>
+   </url>                  
+  </url-list>
+ </mirror>
+ <suite>trixie</suite>
+</project>
+<target>
+ <hostname>rpi64</hostname>
+ <domain></domain>
+ <passwd_hashed>$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/</passwd_hashed>
+ <console>serial0,115200</console>
+ <package>
+     <tar>
+         <name>image.tgz</name>
+     </tar>
+ </package>
+ <debootstrap>
+     <variant>minbase</variant>
+     <include>gpgv</include>
+ </debootstrap>
+
+ <images>
+ <msdoshd>
+ <name>sdcard.img</name>
+ <size>6GB</size>
+ <partition>
+     <size>256MB</size>
+     <label>firmware</label>
+ </partition>
+ <partition>
+     <size>remain</size>
+     <label>root</label>
+     <bootable/>
+ </partition>
+ </msdoshd>
+ </images>
+ <fstab>
+  <bylabel>
+      <label>firmware</label>
+      <mountpoint>/boot/firmware</mountpoint>
+      <fs>
+          <type>vfat</type>
+      </fs>
+  </bylabel>
+  <bylabel>
+      <label>root</label>
+      <mountpoint>/</mountpoint>
+      <fs>
+          <type>ext4</type>
+          <fs-finetuning>
+               <device-command>tune2fs -O ^64bit,^metadata_csum -i 0 {device}</device-command>
+          </fs-finetuning>
+      </fs>
+ 
+  </bylabel>
+ </fstab>
+ <install-recommends/>
+ <pkg-list>
+  <pkg>linux-image-6.6.78-v8-16k-v8</pkg>
+  <pkg>initramfs-tools</pkg>
+  <pkg>firmware-brcm80211</pkg>
+  <pkg>firmware-misc-nonfree</pkg>
+  <pkg>firmware-atheros</pkg>
+  <pkg>firmware-libertas</pkg>
+  <pkg>firmware-linux-free</pkg>
+  <pkg>firmware-misc-nonfree</pkg>
+  <pkg>firmware-realtek</pkg>
+  <pkg>raspi-firmware</pkg>
+  <pkg>zstd</pkg>
+  <pkg>apt-utils</pkg>
+  <pkg>systemd</pkg>
+  <pkg>systemd-resolved</pkg>
+  <pkg>systemd-timesyncd</pkg>
+  <pkg>vim-tiny</pkg>
+  <pkg>busybox</pkg>
+  <pkg>bash</pkg>
+  <pkg>dialog</pkg>
+  <pkg>openssh-server</pkg>
+  <pkg>wpasupplicant</pkg>
+  <pkg>iproute2</pkg>
+  <pkg>net-tools</pkg>
+  <pkg>iputils-ping</pkg>
+  <pkg>iw</pkg>
+  <pkg>ifupdown</pkg>
+  <pkg>bluez</pkg>
+  <pkg>bluez-tools</pkg>
+  <pkg>rfkill</pkg>
+  <pkg>network-manager</pkg>
+  <pkg>curl</pkg>
+  <pkg>ca-certificates</pkg>
+  <pkg>cockpit</pkg>         
+  <pkg>llm</pkg>          
+ </pkg-list>
+ <project-finetuning>
+  <set_packer packer="tarxz">sdcard.img</set_packer>
+ </project-finetuning>
+ <finetuning>
+  <adduser passwd_hashed="$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/" shell="/bin/bash" >pi</adduser>
+
+  <command>ln -s /lib/firmware/brcm/brcmfmac43455-sdio.bin /lib/firmware/brcm/brcmfmac43455-sdio.raspberrypi,5-model-b.bin</command>
+  <command>mkdir -p /boot/firmware</command>
+  <command>cp -a /usr/lib/raspi-firmware/* /boot/firmware/</command>
+  <command>cp -a /usr/lib/linux-image-6.6.78-v8-16k-v8/overlays/  /boot/firmware</command>
+  <command>cp -a /usr/lib/linux-image-6.6.78-v8-16k-v8/broadcom/*  /boot/firmware</command>
+  <command>cp  /boot/vmlinuz-6.6.78-v8-16k-v8  /boot/firmware</command>
+  <command>mkinitramfs -o /boot/initrd.img-6.6.78-v8-16k-v8 6.6.78-v8-16k-v8</command>
+  <file dst="/etc/NetworkManager/system-connections/wifi.nmconnection" mode="600" >
+  [connection]
+  id=wifi
+  type=wifi
+  autoconnect=true
+
+  [wifi]
+  mode=infrastructure
+  ssid="YourSSID"
+
+  [wifi-security]
+  key-mgmt=wpa-psk
+  psk=YourPSK"
+
+  [ipv4]
+  method=auto
+
+  [ipv6]
+  method=ignore
+
+  </file>
+  <file dst="/etc/cockpit/disallowed-users" >
+
+  </file>
+  <file dst="/etc/resolve.conf" >
+      nameserver 8.8.8.8
+  </file> 
+  <file dst="/etc/systemd/system/ollama.service" >
+      [Unit]
+      Description=Ollama Service
+      After=network-online.target
+
+      [Service]
+      ExecStart=/usr/bin/ollama serve
+      User=ollama
+      Group=ollama
+      Restart=always
+      RestartSec=3
+      Environment="PATH=$PATH"
+
+      [Install]
+      WantedBy=default.target
+  </file>
+  
+  <command>systemctl enable NetworkManager</command>
+  <command>systemctl enable systemd-networkd</command>
+  <command>curl -fsSL https://ollama.com/install.sh|sh</command>
+  <command>systemctl daemon-reload</command>
+  <command>systemctl enable ollama.service</command>
+  
+  <command>update-initramfs -u -k all</command>           
+  <file dst="/boot/firmware/cmdline.txt" mode="777">              
+  earlyprintk console=ttyAMA0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=GB  init=/usr/lib/systemd/systemd
+
+  </file>
+  <file dst="/boot/firmware/config.txt" mode="777">
+      enable_uart=1
+      arm_64bit=1
+      dtoverlay=
+      dtoverlay=disable-bt
+      dtoverlay=uart0
+      dtparam=uart0
+      kernel=vmlinuz-6.6.78-v8-16k-v8
+      initramfs initrd.img-6.6.78-v8-16k-v8
+  </file> 
+  
+ </finetuning>
+</target>
+</ns0:RootFileSystem>

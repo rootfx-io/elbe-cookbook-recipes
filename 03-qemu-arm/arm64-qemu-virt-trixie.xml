@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<ns0:RootFileSystem xmlns:ns0="https://www.linutronix.de/projects/Elbe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" created="2009-05-20T08:50:56" revision="6" xsi:schemaLocation="https://www.linutronix.de/projects/Elbe dbsfed.xsd">
+<project>
+<name>ARM Virtual machine</name>
+<version>2.0</version>
+<description>
+  qemu-system-aarch64 -M virt -cpu cortex-a57 -m 1024 -smp 2 -initrd initrd.img-6.1.0-27-arm64    -kernel vmlinuz  -append "root=/dev/sda2 console=ttyAMA0" -global virtio-blk-device.scsi=off  -device virtio-scsi-device,id=scsi -drive file=sdcard.qcow2,id=rootimg,cache=unsafe,if=none  -device scsi-hd,drive=rootimg  -netdev user,id=unet -device virtio-net-device,netdev=unet -nic user,hostfwd=tcp::2022-:22  -nographic -virtfs local,path=$HOME,mount_tag=host0,security_model=mapped,id=host0 
+</description>
+<buildtype>aarch64</buildtype>
+<mirror>
+ <primary_host>deb.debian.org</primary_host>
+ <primary_path>/debian</primary_path>
+ <primary_proto>http</primary_proto>
+</mirror>
+<suite>trixie</suite>
+</project>
+<target>
+<hostname>arm64</hostname>
+<domain>Rootfx</domain>
+<passwd_hashed>$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/</passwd_hashed>
+<console>ttyAMA0,115200</console>
+<images>
+ <msdoshd>
+  <name>sdcard.img</name>
+  <size>3500MiB</size>
+  <partition>
+   <size>200MiB</size>
+   <label>boot</label>
+   <bootable/>
+  </partition>
+  <partition>
+   <size>remain</size>
+   <label>rfs</label>
+  </partition>
+ </msdoshd>
+</images>
+<fstab>
+ <bylabel>
+  <label>boot</label>
+  <mountpoint>/boot</mountpoint>
+  <fs>
+    <type>vfat</type>
+  </fs>
+ </bylabel>
+ <bylabel>
+  <label>rfs</label>
+  <mountpoint>/</mountpoint>
+  <fs>
+   <type>ext2</type>
+   <fs-finetuning>
+     <device-command>tune2fs -i 0 {device}</device-command>
+   </fs-finetuning>
+  </fs>
+ </bylabel>
+</fstab>
+<install-recommends/>
+<finetuning>
+  <rm>/var/cache/apt/archives/*.deb</rm>
+  <mkdir>/mnt/shared</mkdir>
+  <command>echo "host0   /mnt/shared   9p   trans=virtio,version=9p2000.L   0   0"&gt;&gt;/etc/fstab</command>
+</finetuning>
+<pkg-list>
+ <pkg>linux-image-arm64</pkg>
+ <pkg>initramfs-tools</pkg>
+ <pkg>openssh-server</pkg>
+ <pkg>less</pkg>
+ <pkg>bash</pkg>
+ <pkg>vim-nox</pkg>
+ <pkg>wget</pkg>
+ <pkg>ntpdate</pkg>
+ <pkg>busybox</pkg>
+</pkg-list>
+<project-finetuning>
+ <losetup img="sdcard.img">
+   <copy_from_partition part="1" artifact="vmlinuz">/vmlinuz-*-arm64</copy_from_partition>
+   <copy_from_partition part="1" artifact="initrd">/initrd.img-*-arm64</copy_from_partition>
+ </losetup>
+ <img_convert fmt="qcow2" dst="sdcard.qcow2">sdcard.img</img_convert>
+ <set_packer packer="tarxz">sdcard.qcow2</set_packer>
+</project-finetuning>
+</target>
+</ns0:RootFileSystem>

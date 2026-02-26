@@ -1,0 +1,155 @@
+<ns0:RootFileSystem xmlns:ns0="https://www.linutronix.de/projects/Elbe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" created="2009-05-20T08:50:56" revision="6" xsi:schemaLocation="https://www.linutronix.de/projects/Elbe dbsfed.xsd">
+<project>
+<name>RapsberryPi-Ubuntu</name>
+<version>1.0</version>
+<description>
+    Rapsberry Pi  Ubuntu image 
+</description>
+<buildtype>aarch64</buildtype>
+ <mirror>
+ <primary_host>ports.ubuntu.com/</primary_host>
+ <primary_path>/ubuntu-ports</primary_path>
+ <primary_proto>http</primary_proto>
+ <host>http://archive.ubuntu.com/ubuntu</host>
+ <url-list>
+ <url>
+  <binary>http://ports.ubuntu.com/ubuntu-ports jammy restricted</binary>
+  <source>http://ports.ubuntu.com/ubuntu-ports jammy restricted</source>
+ </url>
+  <url>
+   <binary>http://ports.ubuntu.com/ubuntu-ports jammy main universe multiverse</binary>
+   <source>http://ports.ubuntu.com/ubuntu-ports jammy main universe multiverse</source>
+  </url>
+  <url>
+   <binary>http://ports.ubuntu.com/ubuntu-ports jammy-updates main universe multiverse</binary>
+   <source>http://ports.ubuntu.com/ubuntu-ports jammy-updates main universe multiverse</source>
+  </url>
+  <url>
+   <binary>http://ports.ubuntu.com/ubuntu-ports jammy-security main universe multiverse</binary>
+   <source>http://ports.ubuntu.com/ubuntu-ports jammy-security main universe multiverse</source>
+  </url>
+  
+ </url-list>
+</mirror>
+<suite>jammy</suite>
+
+</project>
+<target>
+<hostname>rpi4-ubuntu</hostname>
+<domain></domain>
+<passwd_hashed>$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/</passwd_hashed>
+<console>serial0,115200</console>
+<package>
+<tar>
+    <name>rootfs.tgz</name>
+</tar>
+</package>
+<debootstrap>
+ <variant>minbase</variant>
+ <include>gpgv,curl</include>    
+  
+</debootstrap>
+
+<images>
+ <msdoshd>
+ <name>sdcard.img</name>
+ <size>15GB</size>
+ <partition>
+     <size>256MB</size>
+     <label>firmware</label>
+ </partition>
+ <partition>
+     <size>remain</size>
+     <label>root</label>
+     <bootable/>
+ </partition>
+ </msdoshd>
+</images>
+<fstab>
+ <bylabel>
+  <label>firmware</label>
+  <mountpoint>/boot/firmware</mountpoint>
+  <fs>
+      <type>vfat</type>
+  </fs>
+ </bylabel>
+ <bylabel>
+     <label>root</label>
+     <mountpoint>/</mountpoint>
+     <fs>
+ <type>ext4</type>
+ <fs-finetuning>
+      <device-command>tune2fs -O ^64bit,^metadata_csum -i 0 {device}</device-command>
+ </fs-finetuning>
+     </fs>
+ </bylabel>
+</fstab>
+<project-finetuning>
+    <set_packer packer="none">sdcard.img</set_packer>
+</project-finetuning>
+<install-recommends/>
+<pkg-list>
+ <pkg>linux-raspi</pkg>
+ <pkg>linux-firmware-raspi</pkg>
+ <pkg>linux-firmware</pkg>
+ <pkg>u-boot-rpi</pkg>
+ <pkg>u-boot-tools</pkg>
+ <pkg>rpi-eeprom</pkg>
+ <pkg>libraspberrypi-bin</pkg>
+ <pkg>zstd</pkg>
+ <pkg>apt-utils</pkg>
+ <pkg>systemd</pkg>
+ <pkg>systemd-timesyncd</pkg>
+ <pkg>vim-tiny</pkg>
+ <pkg>busybox</pkg>
+ <pkg>bash</pkg>
+ <pkg>openssh-server</pkg>
+ <pkg>initramfs-tools</pkg>
+
+ <pkg>curl</pkg>
+ <pkg>gnupg2</pkg>
+ <pkg>lsb-release</pkg>
+ <pkg>software-properties-common</pkg>
+ <pkg>build-essential</pkg>
+
+
+ <pkg>python3-argcomplete</pkg>
+ <pkg>python3-pip</pkg>
+ <pkg>git</pkg>
+ <pkg>cmake</pkg>
+
+ <pkg>python3-empy</pkg>
+ <pkg>python3-numpy</pkg>
+
+</pkg-list>
+<finetuning>
+
+ <command>echo 'ROOTPART="LABEL=root"' &gt;&gt; /etc/default/raspi-firmware</command>
+ <command>echo 'KERNEL_ARCH="arm64"' &gt;&gt; /etc/default/raspi-firmware</command>
+ <command>echo 'init=/usr/lib/systemd/systemd' &gt;&gt; /etc/default/raspi-extra-cmdline</command>
+ <command>mkdir -p /boot/firmware</command>
+ <command>cp /usr/lib/linux-firmware-raspi/*  /boot/firmware</command>
+ <command>cp -a /lib/firmware/5.15.0-1087-raspi/device-tree/overlays  /boot/firmware</command>
+ <command>cp -a /lib/firmware/5.15.0-1087-raspi/device-tree/broadcom/*  /boot/firmware</command>
+ <command>cp  /boot/vmlinuz-5.15.0-1087-raspi  /boot/firmware</command>
+ <command>cp  /boot/initrd.img-5.15.0-1087-raspi  /boot/firmware</command>
+ <file dst="/boot/firmware/cmdline.txt" mode="777">              
+     console=serial0,115200 console=tty1 root=/dev/sdb2 rootfstype=ext4 fsck.repair=yes rootwait quiet splash plymouth.ignore-serial-consoles cfg80211.ieee80211_regdom=GB
+ </file>
+ <file dst="/boot/firmware/config.txt" mode="777">
+     enable_uart=1
+     arm_64bit=1
+     kernel=vmlinuz-5.15.0-1087-raspi
+     initramfs initrd.img-5.15.0-1087-raspi
+ </file>
+
+ <command>curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg</command>
+ <command>echo "deb [arch=arm64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu jammy main" | tee /etc/apt/sources.list.d/ros2.list</command>
+ <command>apt update</command>
+ <command>apt search ros-humble-desktop</command>
+ <command>apt install -y ros-humble-desktop</command>
+ <command>update-initramfs -u -k all</command>
+
+</finetuning>
+</target>
+</ns0:RootFileSystem>

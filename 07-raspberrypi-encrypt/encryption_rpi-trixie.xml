@@ -1,0 +1,225 @@
+<?xml version="1.0"?>
+<ns0:RootFileSystem xmlns:ns0="https://www.linutronix.de/projects/Elbe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" created="2009-05-20T08:50:56" revision="6" xsi:schemaLocation="https://www.linutronix.de/projects/Elbe dbsfed.xsd">
+<project>
+<name>RaspberryPi-Encrypt</name>
+<version>1.0</version>
+<description>Raspberry Pi Encrypted image</description>
+<buildtype>aarch64</buildtype>
+<mirror>
+ <primary_host>ftp.de.debian.org</primary_host>
+ <primary_path>/debian</primary_path>
+ <primary_proto>http</primary_proto>
+ <url-list>
+ <url>
+   <binary>http://deb.debian.org/debian-security trixie-security main</binary>
+   <source>http://deb.debian.org/debian-security trixie-security main</source>
+ </url>
+ <url>
+   <binary>http://deb.debian.org/debian trixie non-free-firmware</binary>
+   <source>http://deb.debian.org/debian trixie non-free-firmware</source>
+ </url>
+ <url>
+   <binary>http://deb.debian.org/debian-security trixie-security non-free-firmware</binary>
+   <source>http://deb.debian.org/debian-security trixie-security non-free-firmware</source>
+ </url>
+ </url-list>
+</mirror>
+<suite>trixie</suite>
+</project>
+<target>
+<hostname>rpi64</hostname>
+<domain/>
+<passwd_hashed>$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/</passwd_hashed>
+<console>serial0,115200</console>
+<package>
+  <tar>
+   <name>rootfs.tgz</name>
+  </tar>
+</package>
+<debootstrap>
+  <variant>minbase</variant>
+</debootstrap>
+
+<images>
+ <msdoshd>
+ <name>sdcard.img</name>
+ <size>4GB</size>
+ <partition>
+   <size>128MB</size>
+   <label>firmware</label>
+ </partition>
+ <partition>
+   <size>remain</size>
+   <label>root</label>
+   <bootable/>
+ </partition>
+ </msdoshd>
+</images>
+<fstab>
+ <bylabel>
+  <label>firmware</label>
+  <mountpoint>/boot/firmware</mountpoint>
+  <fs>
+    <type>vfat</type>
+  </fs>
+ </bylabel>
+ <bylabel>
+  <label>root</label>
+  <mountpoint>/</mountpoint>
+  <fs>
+    <type>ext4</type>
+  </fs>
+ </bylabel>
+</fstab>
+<project-finetuning>
+ <set_packer packer="none">sdcard.img</set_packer>
+ <losetup img="sdcard.img">
+ <command part="2" nomount="true">
+   cryptsetup luksFormat  --type luks2  --cipher xchacha20,aes-adiantum-plain64 --hash sha256  --iter-time 1000 --key-size 256 --pbkdf pbkdf2  --key-file keyfile ${ELBE_DEV}
+ </command>
+
+ <command part="2" nomount="true">
+   cryptsetup open ${ELBE_DEV} encrypted_root --key-file keyfile
+ </command>
+
+ <command part="2" nomount="true">
+   mkfs.ext4 /dev/mapper/encrypted_root
+ </command>
+ <command part="2" nomount="true">
+   mount   /dev/mapper/encrypted_root /mnt
+ </command>
+ <command part="2" nomount="true">
+   pwd
+ </command>
+ <command part="2" nomount="true">
+   tar -xvf ../rootfs.tgz -C /mnt
+ </command>
+ <command part="2" nomount="true">
+   umount /mnt
+ </command>
+ <command part="2" nomount="true">
+   cryptsetup luksClose  encrypted_root 
+ </command>
+ </losetup>
+</project-finetuning>
+<install-recommends/>
+<pkg-list>
+ <pkg>linux-image-arm64</pkg>
+ <pkg>cryptsetup-initramfs</pkg>
+ <pkg>firmware-brcm80211</pkg>
+ <pkg>raspi-firmware</pkg>
+ <pkg>zstd</pkg>
+ <pkg>apt-utils</pkg>
+ <pkg>systemd</pkg>
+ <pkg>systemd-resolved</pkg>
+ <pkg>systemd-timesyncd</pkg>
+ <pkg>vim-tiny</pkg>
+ <pkg>cryptsetup</pkg>
+ <pkg>busybox</pkg>
+ <pkg>bash</pkg>
+ <pkg>dialog</pkg>
+ <pkg>openssh-server</pkg>
+ <pkg>wpasupplicant</pkg>
+ <pkg>iproute2</pkg>
+ <pkg>net-tools</pkg>
+ <pkg>iputils-ping</pkg>
+ <pkg>iw</pkg>
+ <pkg>ifupdown</pkg>
+ <pkg>bluez</pkg>
+ <pkg>bluez-tools</pkg>
+ <pkg>rfkill</pkg>
+</pkg-list>
+<finetuning>
+ <file dst="/etc/initramfs-tools/scripts/local-top/cryptroot" mode="777">
+   #!/bin/sh
+
+   PREREQ=""
+
+   prereqs() {
+           echo "$PREREQ"
+   }
+
+   case "$1" in
+     prereqs)
+             prereqs
+             exit 0
+     ;;
+   esac
+
+   echo "Running decryptfs script in init-bottom..." &gt; /dev/.decrypt_log
+   modprobe ext4
+   ROOT_DEV="/dev/mmcblk0p2"
+   MAPPER_NAME="encrypted_root"
+   KEY_FILE="/etc/cryptsetup/keyfile"
+   echo $PWD
+   cryptsetup open --type luks2 "$ROOT_DEV" "$MAPPER_NAME" --key-file "$KEY_FILE"
+
+   exit 0
+ </file>
+ <file dst="/etc/initramfs-tools/hooks/add-keyfile" mode="777">
+   #!/bin/sh
+
+   PREREQ=""
+
+   prereqs() {
+           echo "$PREREQ"
+   }
+
+   case "$1" in
+     prereqs)
+             prereqs
+             exit 0
+     ;;
+   esac
+
+   if [ -e /etc/cryptsetup/keyfile ]; then
+    mkdir -p  "${DESTDIR}/etc/cryptsetup/"
+    cp /etc/cryptsetup/keyfile "${DESTDIR}/etc/cryptsetup/keyfile"
+    chmod 600 "${DESTDIR}/etc/cryptsetup/keyfile"
+   fi
+
+ </file>
+ <file dst="/etc/initramfs-tools/modules" mode="777">
+   dm_crypt
+   aes
+   sha256
+ </file>
+ <file dst="/etc/crypttab" mode="777">       
+   encrypted_root /dev/mmcblk0p2 /etc/cryptsetup/keyfile luks
+ </file>
+ <file dst="/etc/initramfs-tools/conf.d/cryptsetup" mode="777">
+   CRYPTSETUP=y
+ </file>
+ <file dst="/etc/systemd/network/25-wlan0.network" mode="644">
+   [Match]
+   Name=wlan0
+
+   [Network]
+   DHCP=yes
+
+ </file>
+ <file dst="/etc/wpa_supplicant/wpa_supplicant-wlan0.conf" mode="600">
+   ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+   update_config=1
+   country=US
+
+   network={
+   ssid="SomeSSID"
+   psk=" SomeKey"
+   }
+ </file>
+ <file dst="/etc/default/raspi-firmware" append="true">
+   ROOTPART="/dev/mapper/encrypted_root"
+   CRYPTDEVICE="/dev/mmcblk0p2:encrypted_root"
+   KERNEL_ARCH="arm64"
+ </file>
+ <file dst="/etc/default/raspi-extra-cmdline" append="true">
+   init=/usr/lib/systemd/systemd
+ </file>
+ <command>update-initramfs -u -k all</command>
+ <command>systemctl enable wpa_supplicant@wlan0.service</command>
+ <t2b_cp path="/etc/cryptsetup/keyfile">keyfile</t2b_cp>
+</finetuning>
+</target>
+<archivedir>overlays/</archivedir>
+</ns0:RootFileSystem>

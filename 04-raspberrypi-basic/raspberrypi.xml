@@ -1,0 +1,136 @@
+<ns0:RootFileSystem xmlns:ns0="https://www.linutronix.de/projects/Elbe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" created="2009-05-20T08:50:56" revision="6" xsi:schemaLocation="https://www.linutronix.de/projects/Elbe dbsfed.xsd">
+<project>
+  <name>RaspberryPi</name>
+  <version>1.0</version>
+  <description>Rapsberry Pi Basic Bootable Image</description>
+  <buildtype>aarch64</buildtype>
+  <mirror>
+    <primary_host>ftp.de.debian.org</primary_host>
+    <primary_path>/debian</primary_path>
+    <primary_proto>http</primary_proto>
+      <url-list>
+        <url>
+          <binary>http://deb.debian.org/debian-security bookworm-security main</binary>
+          <source>http://deb.debian.org/debian-security bookworm-security main</source>
+        </url>
+        <url>
+          <binary>http://deb.debian.org/debian bookworm non-free-firmware</binary>
+          <source>http://deb.debian.org/debian bookworm non-free-firmware</source>
+        </url>
+        <url>
+          <binary>http://deb.debian.org/debian-security bookworm-security non-free-firmware</binary>
+          <source>http://deb.debian.org/debian-security bookworm-security non-free-firmware</source>
+        </url>
+      </url-list>
+  </mirror>
+  <suite>bookworm</suite>
+</project>
+<target>
+  <hostname>raspberry</hostname>
+  <domain></domain>
+  <passwd_hashed>$6$bOQ4Sf4rSdI1IfRd$3Hai04jz2OYEW108SZWeweGO/rGvO65ITthDDtDuaC/8Gpwek/xT4rUvKBkBHFIjTDd6.klFdNJ685kxgabHh/</passwd_hashed>
+  <console>serial0,115200</console>
+  <package><tar><name>image.tgz</name></tar></package>
+  <debootstrap>
+    <variant>minbase</variant>
+  </debootstrap>
+
+  <images>
+    <msdoshd>
+      <name>sdcard.img</name>
+      <size>7GB</size>
+      <partition>
+        <size>256MB</size>
+        <label>firmware</label>
+      </partition>
+      <partition>
+        <size>remain</size>
+        <label>root</label>
+        <bootable/>
+      </partition>
+    </msdoshd>
+  </images>
+  <fstab>
+    <bylabel>
+      <label>firmware</label>
+      <mountpoint>/boot/firmware</mountpoint>
+      <fs>
+        <type>vfat</type>
+      </fs>
+    </bylabel>
+    <bylabel>
+      <label>root</label>
+      <mountpoint>/</mountpoint>
+      <fs>
+      <type>ext4</type>
+      <fs-finetuning>
+        <device-command>tune2fs -O ^64bit,^metadata_csum -i 0 {device}</device-command>
+      </fs-finetuning>
+      </fs>
+
+    </bylabel>
+  </fstab>
+        
+  <install-recommends/>
+        
+  <pkg-list>
+    <pkg>linux-image-arm64</pkg>
+    <pkg>firmware-brcm80211</pkg>
+    <pkg>raspi-firmware</pkg>
+    <pkg>zstd</pkg>
+    <pkg>apt-utils</pkg>
+    <pkg>systemd</pkg>                     
+    <pkg>vim-tiny</pkg>
+    <pkg>busybox</pkg>
+    <pkg>bash</pkg>
+    <pkg>dialog</pkg>
+    <pkg>openssh-server</pkg>
+    <pkg>wpasupplicant</pkg>
+    <pkg>iproute2</pkg>
+    <pkg>net-tools</pkg>
+    <pkg>iputils-ping</pkg>
+    <pkg>iw</pkg>
+    <pkg>ifupdown</pkg>
+    <pkg>bluez</pkg>
+    <pkg>bluez-tools</pkg>
+    <pkg>rfkill</pkg>
+  </pkg-list>
+        
+  <project-finetuning>
+    <set_packer packer="tarxz">sdcard.img</set_packer>
+  </project-finetuning>
+  <finetuning>
+    <file dst="/etc/systemd/network/25-wlan0.network" mode="644">
+    [Match]
+    Name=wlan0
+
+    [Network]
+    DHCP=yes
+    </file>
+    <file dst="/etc/resolv.conf" mode="600">		
+    nameserver 8.8.8.8 
+    </file>
+    <file dst="/etc/wpa_supplicant/wpa_supplicant-wlan0.conf" mode="600">
+    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+    update_config=1
+
+    network={
+    ssid="YourSSID"
+    psk="YourKey"
+    }
+    </file>
+                
+    <file dst="/etc/default/raspi-firmware" append="true" >
+    ROOTPART="LABEL=root"
+    KERNEL_ARCH="arm64"
+    </file>
+
+    <file dst="/etc/default/raspi-extra-cmdline" append="true">
+    init=/usr/lib/systemd/systemd
+    </file>
+    <command>update-initramfs -u -k all</command>
+    <command>systemctl enable wpa_supplicant@wlan0.service</command>
+    <command>systemctl enable systemd-networkd</command>
+  </finetuning>
+</target>
+</ns0:RootFileSystem>
