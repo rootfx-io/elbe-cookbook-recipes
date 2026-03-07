@@ -1,29 +1,77 @@
-I’m happy to share that my new technical book is now available:
+# ELBE Cookbook Recipes
 
-Building Embedded Systems with Linux, Raspberry Pi and ELBE
+![Building Embedded Systems with Linux, Raspberry Pi and ELBE](docs/BookCover.jpg)
 
-The book focuses on practical embedded Linux development and shows how to build reproducible systems using the ELBE (Embedded Linux Build Environment).
+Example recipes from the book  
+**Building Embedded Systems with Linux, Raspberry Pi and ELBE**
 
-Instead of relying on static system images, the book demonstrates how to treat the operating system as a reproducible build artifact using Debian-based workflows.
+This repository contains the **ELBE build recipes** used throughout the book.  
+The examples demonstrate how to build **reproducible embedded Linux systems** using the **ELBE (Embedded Linux Build Environment)** and Debian.
 
-Topics covered include:
+---
 
-• ELBE build system fundamentals
-• Debian package management in embedded systems
-• Raspberry Pi system image generation
-• container environments with Podman
-• encrypted filesystems
-• custom kernel builds
-• storage setups using Btrfs, OverlayFS and SquashFS
-• QEMU-based development environments
+## Book
 
-All build recipes from the book are available on GitHub:
+📖 Book page  
+https://rootfx.io/book.html
 
-https://github.com/rootfx-io/elbe-cookbook-recipes
-
-The foreword was written by John Ogness from Linutronix, an original contributor to the ELBE project.
-
-Many thanks to AFRA GmbH for sponsoring the work.
-
-Book link:
+📚 Book link  
 https://kdpbook.link/for/3982834406
+
+---
+
+## About the Book
+
+*Building Embedded Systems with Linux, Raspberry Pi and ELBE* focuses on practical workflows for constructing reproducible embedded Linux systems.
+
+The book demonstrates how to treat the operating system as a **reproducible build artifact**, enabling developers to generate root filesystems and system images in a structured and maintainable way.
+
+Examples use **Raspberry Pi** as the primary development platform and walk through real-world embedded Linux build scenarios.
+
+---
+
+## Example Recipes Included
+
+This repository contains practical ELBE build configurations such as:
+
+- Docker build environments
+- Desktop environments
+- QEMU ARM virtual platforms
+- Raspberry Pi minimal images
+- Raspberry Pi Btrfs filesystem
+- OverlayFS and SquashFS systems
+- Encrypted filesystems
+- Podman container environments
+- Custom Raspberry Pi kernel builds
+- LLM development machine on Raspberry Pi 5
+- ROS2 development environment
+
+---
+
+## What is ELBE
+
+ELBE (Embedded Linux Build Environment) is a Debian-based build system originally developed by Linutronix.
+
+It allows developers to generate root filesystems and system images from declarative XML configuration files, enabling **reproducible embedded Linux builds**.
+
+More information:
+
+https://elbe-rfs.org
+
+---
+
+## Hardware Platform
+
+Most examples in this repository target the **Raspberry Pi** platform.
+
+https://www.raspberrypi.com
+
+---
+
+## Debian
+
+The recipes rely on the Debian ecosystem and its package management infrastructure.
+
+https://www.debian.org
+
+---
