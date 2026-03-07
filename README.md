@@ -1,6 +1,6 @@
 # ELBE Cookbook Recipes
 
-![Building Embedded Systems with Linux, Raspberry Pi and ELBE](docs/BookCover.jpg)
+![Building Embedded Systems with Linux, Raspberry Pi and ELBE](https://raw.githubusercontent.com/rootfx-io/elbe-cookbook-recipes/main/docs/Bookcover.jpg)
 
 Example recipes from the book  
 **Building Embedded Systems with Linux, Raspberry Pi and ELBE**
@@ -54,24 +54,25 @@ ELBE (Embedded Linux Build Environment) is a Debian-based build system originall
 
 It allows developers to generate root filesystems and system images from declarative XML configuration files, enabling **reproducible embedded Linux builds**.
 
-More information:
-
+More information:  
 https://elbe-rfs.org
 
 ---
 
 ## Hardware Platform
 
-Most examples in this repository target the **Raspberry Pi** platform.
-
+Most examples in this repository target the **Raspberry Pi** platform.  
 https://www.raspberrypi.com
 
 ---
 
 ## Debian
 
-The recipes rely on the Debian ecosystem and its package management infrastructure.
-
+The recipes rely on the Debian ecosystem and its package management infrastructure.  
 https://www.debian.org
 
 ---
+
+## License
+
+The recipes in this repository are provided as educational examples for learning ELBE-based embedded Linux development.
